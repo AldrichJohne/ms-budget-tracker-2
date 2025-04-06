@@ -11,10 +11,12 @@ import java.util.UUID;
 @Table(name = "bills")
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class Bills {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
     private String name;
     private double budget;
+    private boolean isDeleted;
 }

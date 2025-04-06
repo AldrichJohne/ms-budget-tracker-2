@@ -124,7 +124,7 @@ public class ActorServiceImplTest {
         Mockito.when(actorRepoRepository.findById(uuid)).thenReturn(Optional.of(actor));
         Mockito.when(actorRepoRepository.save(actor)).thenReturn(actor);
 
-        var result = actorService.updateActor(uuid, ActorMapper.convert(Either.left(actor)).get());
+        var result = actorService.updateActor(ActorMapper.convert(Either.left(actor)).get());
 
         Assertions.assertNotNull(result.getResponse());
         Assertions.assertEquals("Successfully updated an actor", result.getMessage());
@@ -137,7 +137,7 @@ public class ActorServiceImplTest {
         Actor actor = new Actor(uuid, "Aldrich", "");
         Mockito.doThrow(new EntityNotFoundException("")).when(actorRepoRepository).findById(uuid);
 
-        var result = actorService.updateActor(uuid, ActorMapper.convert(Either.left(actor)).get());
+        var result = actorService.updateActor(ActorMapper.convert(Either.left(actor)).get());
 
         Assertions.assertEquals("Error occurred while updating actor", result.getMessage());
         Assertions.assertEquals("Error", result.getStatus());
@@ -149,7 +149,7 @@ public class ActorServiceImplTest {
         Actor actor = new Actor(uuid, "Aldrich", "");
         Mockito.doThrow(new NoSuchElementException("")).when(actorRepoRepository).findById(uuid);
 
-        var result = actorService.updateActor(uuid, ActorMapper.convert(Either.left(actor)).get());
+        var result = actorService.updateActor(ActorMapper.convert(Either.left(actor)).get());
 
         Assertions.assertEquals("Error occurred while updating an actor", result.getMessage());
         Assertions.assertEquals("Error", result.getStatus());
@@ -158,7 +158,7 @@ public class ActorServiceImplTest {
     @Test
     public void failed_update_actor_null_input() {
         Actor actor = new Actor(null, "Aldrich", "");
-        var result = actorService.updateActor(null, ActorMapper.convert(Either.left(actor)).get());
+        var result = actorService.updateActor(ActorMapper.convert(Either.left(actor)).get());
 
         Assertions.assertEquals("Update actor input is null", result.getMessage());
         Assertions.assertEquals("Error", result.getStatus());

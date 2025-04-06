@@ -8,7 +8,7 @@ import java.util.UUID;
 public interface ActorService {
     ResponseWrapper addActor(ActorDTO actorDTO);
     ResponseWrapper removeActor(UUID id);
-    ResponseWrapper updateActor(UUID id, ActorDTO actorDTO);
+    ResponseWrapper updateActor(ActorDTO actorDTO);
     ResponseWrapper getActor(UUID id);
     ResponseWrapper getActors();
 }

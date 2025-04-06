@@ -69,12 +69,12 @@ public class ActorServiceImpl implements ActorService {
     }
 
     @Override
-    public ResponseWrapper updateActor(UUID id, ActorDTO actorDTO) {
-        if (Objects.isNull(actorDTO) || Objects.isNull(id)) {
+    public ResponseWrapper updateActor(ActorDTO actorDTO) {
+        if (Objects.isNull(actorDTO)) {
             return new ResponseWrapper("", "Error", "Update actor input is null");
         }
         try {
-            actorRepo.findById(id).get();
+            actorRepo.findById(actorDTO.getId()).orElseThrow(() -> new EntityNotFoundException("Actor with id " + actorDTO.getId() + " not found"));
             Actor actorUpdatedValue = actorRepo.save(ActorMapper.convert(Either.right(actorDTO)).getLeft());
             return new ResponseWrapper(
                     actorUpdatedValue,
@@ -82,7 +82,7 @@ public class ActorServiceImpl implements ActorService {
                     "Successfully updated an actor"
             );
         } catch (final EntityNotFoundException exception) {
-            log.error("Error occurred while updating an actor, non existing record for actor with id {}", id);
+            log.error("Error occurred while updating an actor, non existing record for actor with id {}", actorDTO.getId());
             return new ResponseWrapper(exception.getMessage(), "Error", "Error occurred while updating actor");
         } catch (final Exception exception) {
             log.error("Error occurred while updating an actor; {}", exception.getMessage());

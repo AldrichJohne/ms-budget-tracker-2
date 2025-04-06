@@ -11,4 +11,5 @@ public class BillsDTO {
     private UUID id;
     private String name;
     private double budget;
+    private boolean isDeleted;
 }

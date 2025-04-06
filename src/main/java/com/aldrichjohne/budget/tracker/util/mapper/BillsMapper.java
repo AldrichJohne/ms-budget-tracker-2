@@ -19,13 +19,15 @@ public class BillsMapper {
             return Either.right(new BillsDTO(
                     toConvert.getLeft().getId(),
                     toConvert.getLeft().getName(),
-                    toConvert.getLeft().getBudget()
+                    toConvert.getLeft().getBudget(),
+                    toConvert.getLeft().isDeleted()
             ));
         } else {
             return Either.left(new Bills(
                     toConvert.get().getId(),
                     toConvert.get().getName(),
-                    toConvert.get().getBudget()
+                    toConvert.get().getBudget(),
+                    toConvert.get().isDeleted()
             ));
         }
     }

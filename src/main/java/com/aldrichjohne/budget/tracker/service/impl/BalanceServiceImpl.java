@@ -1,16 +1,19 @@
 package com.aldrichjohne.budget.tracker.service.impl;
 
+import com.aldrichjohne.budget.tracker.enums.ResponseWrapperStatus;
 import com.aldrichjohne.budget.tracker.model.dto.BalanceRequestDTO;
 import com.aldrichjohne.budget.tracker.model.entity.Balance;
 import com.aldrichjohne.budget.tracker.model.entity.dto.BalanceDTO;
 import com.aldrichjohne.budget.tracker.repository.BalanceRepo;
 import com.aldrichjohne.budget.tracker.service.BalanceService;
 import com.aldrichjohne.budget.tracker.util.mapper.BalanceMapper;
+import com.aldrichjohne.budget.tracker.util.mapper.model.ResponseWrapper;
 import io.vavr.control.Either;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.UUID;
 
 public class BalanceServiceImpl implements BalanceService {
 
@@ -21,28 +24,33 @@ public class BalanceServiceImpl implements BalanceService {
     }
 
     @Override
-    public BalanceDTO updateBalance(final BalanceRequestDTO balanceRequestDTO)
+    public ResponseWrapper updateBalance(final BalanceRequestDTO balanceRequestDTO)
             throws NoSuchElementException {
 
         if (Objects.isNull(balanceRequestDTO)) {
-            throw new IllegalArgumentException("Invalid input " + null);
+            throw new IllegalArgumentException("Update Balance: Input Body is null");
         }
 
-        final Optional<Balance> currentBalance = balanceRepo.findById(balanceRequestDTO.getId());
-        if (currentBalance.isEmpty()) {
-            throw new NoSuchElementException("Couldn't find current balance record from the database");
-        }
+        UUID inputId = balanceRequestDTO.getId();
+
+        Balance currentBalance = balanceRepo.findById(inputId).orElseThrow(
+                () -> new EntityNotFoundException("Update Balance: Balance record with ID = " + inputId + " not found"));
 
         final BalanceDTO newBalanceDto = new BalanceDTO();
-        newBalanceDto.setId(balanceRequestDTO.getId());
+
+        newBalanceDto.setId(inputId);
         newBalanceDto.setRemainingBalance(this.operation(
-                currentBalance.get().getRemainingBalance(),
+                currentBalance.getRemainingBalance(),
                 balanceRequestDTO.getAmount(),
                 balanceRequestDTO.getOperation()
         ));
         final Balance newBalanceEntity = balanceRepo.save(Objects.requireNonNull(BalanceMapper.convert(Either.right(newBalanceDto))).getLeft());
 
-        return Objects.requireNonNull(BalanceMapper.convert(Either.left(newBalanceEntity))).get();
+        return new ResponseWrapper(
+                Objects.requireNonNull(BalanceMapper.convert(Either.left(newBalanceEntity))).get(),
+                ResponseWrapperStatus.SUCCESS.toString(),
+                "Update Balance: Success"
+        );
     }
 
     private double operation(double remainingBal, double amount, String operation) throws IllegalArgumentException {
@@ -50,16 +58,18 @@ public class BalanceServiceImpl implements BalanceService {
             case "add" -> remainingBal + amount;
             case "subtract" -> {
                 if (remainingBal < amount) {
-                    throw new IllegalArgumentException("Insufficient balance");
+                    throw new IllegalArgumentException("Update Balance: Insufficient balance");
                 }
                 yield remainingBal - amount;
             }
-            default -> throw new IllegalArgumentException("Invalid operation type");
+            default -> throw new IllegalArgumentException("Update Balance: Invalid operation type");
         };
     }
 
     @Override
-    public Balance getBalance() {
-        return balanceRepo.findAll().getFirst();
+    public ResponseWrapper getBalance() {
+        return new ResponseWrapper(
+                balanceRepo.findAll().getFirst(), ResponseWrapperStatus.SUCCESS.toString(), "Retrieve Balance: Success"
+        );
     }
 }

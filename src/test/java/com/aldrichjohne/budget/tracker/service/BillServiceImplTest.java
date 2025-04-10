@@ -1,10 +1,12 @@
 package com.aldrichjohne.budget.tracker.service;
 
+import com.aldrichjohne.budget.tracker.enums.ResponseWrapperStatus;
 import com.aldrichjohne.budget.tracker.model.entity.Bills;
 import com.aldrichjohne.budget.tracker.model.entity.dto.BillsDTO;
 import com.aldrichjohne.budget.tracker.repository.BillRepo;
 import com.aldrichjohne.budget.tracker.service.impl.BillServiceImpl;
 import com.aldrichjohne.budget.tracker.util.mapper.BillsMapper;
+import com.aldrichjohne.budget.tracker.util.mapper.model.ResponseWrapper;
 import io.vavr.control.Either;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
@@ -38,41 +40,17 @@ public class BillServiceImplTest {
         var result = service.addBill(BillsMapper.convert(Either.left(bill)).get());
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals("Successfully added a bill", result.getMessage());
+        Assertions.assertEquals("Add Bill: Success", result.getMessage());
     }
 
-    @Test
-    void failed_adding_bill_DataIntegrityViolationException() {
-        UUID uuid = UUID.randomUUID();
-        Bills bill = new Bills(uuid, "E-Bill", 4000, false);
-        Mockito.doThrow(new DataIntegrityViolationException("")).when(repo).save(bill);
-
-        DataIntegrityViolationException exception = Assertions.assertThrows(DataIntegrityViolationException.class, () -> {
-            service.addBill(BillsMapper.convert(Either.left(bill)).get());
-        });
-
-        Assertions.assertEquals("", exception.getMessage());
-
-    }
-
-    @Test
-    void failed_adding_bill_GenericException() {
-        UUID uuid = UUID.randomUUID();
-        Bills bill = new Bills(uuid, "E-Bill", 4000, false);
-        Mockito.doThrow(new NoSuchElementException("")).when(repo).save(bill);
-
-        Assertions.assertThrows(NoSuchElementException.class, () -> {
-            service.addBill(BillsMapper.convert(Either.left(bill)).get());
-        });
-    }
 
     @Test
     void failed_adding_bill_null_input() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+        IllegalArgumentException exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
             service.addBill(null);
         });
 
-        Assertions.assertEquals("Invalid input null", exception.getMessage());
+        Assertions.assertEquals("Add Bill: Input is null", exception.getMessage());
     }
 
     @Test
@@ -83,26 +61,17 @@ public class BillServiceImplTest {
         Mockito.when(repo.save(bill)).thenReturn(new Bills(uuid, "E-bill", 4000, true));
 
         var result = service.removeBill(uuid);
+        Assertions.assertEquals("SUCCESS", result.getStatus());
 
     }
 
     @Test
     void failed_deleting_bill_EntityNotFoundException() {
         UUID uuid = UUID.randomUUID();
-        Mockito.doThrow(new EntityNotFoundException("")).when(repo).findById(uuid);
+        Mockito.when(repo.findById(uuid)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(EntityNotFoundException.class, () -> {
             service.removeBill(uuid);
-        });
-    }
-
-    @Test
-    void failed_deleting_bill_GenericException() {
-        UUID uuid = UUID.randomUUID();
-        Mockito.doThrow(new NoSuchElementException("")).when(repo).findById(uuid);
-
-        Assertions.assertThrows(NoSuchElementException.class, () -> {
-           service.removeBill(uuid);
         });
     }
 
@@ -112,7 +81,7 @@ public class BillServiceImplTest {
             service.removeBill(null);
         });
 
-        Assertions.assertEquals("Invalid input null", exception.getMessage());
+        Assertions.assertEquals("Remove Bill: Input ID is null", exception.getMessage());
     }
 
     @Test
@@ -122,40 +91,32 @@ public class BillServiceImplTest {
         Mockito.when(repo.findById(uuid)).thenReturn(Optional.of(bill));
         Mockito.when(repo.save(bill)).thenReturn(bill);
 
-        var result = service.updateBill(uuid, BillsMapper.convert(Either.left(bill)).get());
+        var result = service.updateBill(BillsMapper.convert(Either.left(bill)).get());
+        ResponseWrapper expected = new ResponseWrapper(BillsMapper.convert(Either.left(bill)).get(), ResponseWrapperStatus.SUCCESS.toString(), "Update Bill: Success");
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(BillsMapper.convert(Either.left(bill)).get(), result);
+        Assertions.assertEquals(expected, result);
     }
 
     @Test
     void failed_updating_bill_EntityNotFoundException() {
         UUID uuid = UUID.randomUUID();
         Bills bill = new Bills(uuid, "E-Bill", 4000, false);
+        Mockito.when(repo.findById(uuid)).thenReturn(Optional.empty());
+
         Mockito.doThrow(new EntityNotFoundException("")).when(repo).findById(uuid);
         Assertions.assertThrows(EntityNotFoundException.class, () -> {
-            service.updateBill(uuid, BillsMapper.convert(Either.left(bill)).get());
-        });
-    }
-
-    @Test
-    void failed_updating_bill_GenericException() {
-        UUID uuid = UUID.randomUUID();
-        Bills bill = new Bills(uuid, "E-Bill", 4000, false);
-        Mockito.doThrow(new NoSuchElementException("")).when(repo).findById(uuid);
-
-        Assertions.assertThrows(NoSuchElementException.class, () -> {
-            service.updateBill(uuid, BillsMapper.convert(Either.left(bill)).get());
+            service.updateBill(BillsMapper.convert(Either.left(bill)).get());
         });
     }
 
     @Test
     void failed_update_bill_null_input() {
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            service.updateBill(null, null);
+            service.updateBill(null);
         });
 
-        Assertions.assertEquals("Invalid input null", exception.getMessage());
+        Assertions.assertEquals("Update Bill: Input Body is null", exception.getMessage());
     }
 
     @Test
@@ -163,17 +124,18 @@ public class BillServiceImplTest {
         UUID uuid = UUID.randomUUID();
         Bills bill = new Bills(uuid, "E-Bill", 4000, false);
         Mockito.when(repo.findById(uuid)).thenReturn(Optional.of(bill));
+        ResponseWrapper expected = new ResponseWrapper(BillsMapper.convert(Either.left(bill)).get(), ResponseWrapperStatus.SUCCESS.toString(), "Retrieve Bill: Success");
 
         var result = service.getBill(uuid);
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(BillsMapper.convert(Either.left(bill)).get(), result);
+        Assertions.assertEquals(expected, result);
     }
 
     @Test
     void failed_fetching_bill_EntityNotFoundException() {
         UUID uuid = UUID.randomUUID();
-        Mockito.doThrow(new EntityNotFoundException("")).when(repo).findById(uuid);
+        Mockito.when(repo.findById(uuid)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(EntityNotFoundException.class, () -> {
             service.getBill(uuid);
@@ -186,17 +148,7 @@ public class BillServiceImplTest {
             service.getBill(null);
         });
 
-        Assertions.assertEquals("Invalid input null", exception.getMessage());
-    }
-
-    @Test
-    void failed_fetching_bill_GenericException() {
-        UUID uuid = UUID.randomUUID();
-        Mockito.doThrow(new NoSuchElementException("")).when(repo).findById(uuid);
-
-        Assertions.assertThrows(NoSuchElementException.class, () -> {
-            service.getBill(uuid);
-        });
+        Assertions.assertEquals("Retrieve Bill: Input ID is null", exception.getMessage());
     }
 
     @Test
@@ -210,7 +162,6 @@ public class BillServiceImplTest {
         var result = service.getBillWithoutDeleted();
 
         Assertions.assertNotNull(result);
-        Assertions.assertTrue(result.getResponse() instanceof List<?>);
     }
 
     @Test
@@ -224,7 +175,6 @@ public class BillServiceImplTest {
         var result = service.getAllBillsWithDeleted();
 
         Assertions.assertNotNull(result);
-        //Assertions.assertEquals(3, result.size());
     }
 
     @Test

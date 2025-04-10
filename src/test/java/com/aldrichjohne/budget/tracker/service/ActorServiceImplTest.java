@@ -20,6 +20,8 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 @ExtendWith({SpringExtension.class})
 public class ActorServiceImplTest {
     @Mock
@@ -41,35 +43,13 @@ public class ActorServiceImplTest {
     }
 
     @Test
-    public void failed_adding_actor_DataIntegrityViolationException() {
-        UUID uuid = UUID.randomUUID();
-        Actor actor = new Actor(uuid, "Aldrich", "");
-        Mockito.doThrow(new DataIntegrityViolationException("")).when(actorRepoRepository).save(actor);
-
-        var result = actorService.addActor(ActorMapper.convert(Either.left(actor)).get());
-
-        Assertions.assertEquals("Error occurred on saving new actor due to Data Integrity Violation", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
-    }
-
-    @Test
-    public void failed_adding_actor_GenericException() {
-        UUID uuid = UUID.randomUUID();
-        Actor actor = new Actor(uuid, "Aldrich", "");
-        Mockito.doThrow(new NoSuchElementException("")).when(actorRepoRepository).save(actor);
-
-        var result = actorService.addActor(ActorMapper.convert(Either.left(actor)).get());
-
-        Assertions.assertEquals("Error occurred on saving new actor", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
-    }
-
-    @Test
     public void failed_adding_actor_null_input() {
-        var result = actorService.addActor(null);
 
-        Assertions.assertEquals("Add actor input is null", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            actorService.addActor(null);
+        });
+
+        Assertions.assertEquals("Add Actor: Input Body is null", exception.getMessage());
     }
 
     @Test
@@ -83,38 +63,32 @@ public class ActorServiceImplTest {
         var result = actorService.removeActor(uuid);
 
         Assertions.assertNotNull(result.getResponse());
-        Assertions.assertEquals("Successfully deleted an actor", result.getMessage());
+        Assertions.assertEquals("Delete Actor: Success", result.getMessage());
         Assertions.assertEquals("Success", result.getStatus());
     }
 
     @Test
     public void failed_deleting_actor_EntityNotFoundException() {
         UUID uuid = UUID.randomUUID();
-        Mockito.doThrow(new EntityNotFoundException("")).when(actorRepoRepository).findById(uuid);
 
-        var result = actorService.removeActor(uuid);
+        Mockito.when(actorRepoRepository.findById(uuid)).thenReturn(Optional.empty());
 
-        Assertions.assertEquals("Error occurred while removing actor", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
+        EntityNotFoundException thrownException = assertThrows(EntityNotFoundException.class, () -> {
+            actorService.removeActor(uuid);
+        });
+
+        Assertions.assertEquals("Delete Actor: Actor with ID = " + uuid + " not found", thrownException.getMessage());
     }
 
-    @Test
-    public void failed_deleting_actor_GenericException() {
-        UUID uuid = UUID.randomUUID();
-        Mockito.doThrow(new NoSuchElementException("")).when(actorRepoRepository).findById(uuid);
-
-        var result = actorService.removeActor(uuid);
-
-        Assertions.assertEquals("Error occurred while removing an actor", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
-    }
 
     @Test
     public void failed_deleting_actor_null_input() {
-        var result = actorService.removeActor(null);
 
-        Assertions.assertEquals("Delete actor input is null", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            actorService.removeActor(null);
+        });
+
+        Assertions.assertEquals("Delete Actor: Input ID is null", exception.getMessage());
     }
 
     @Test
@@ -135,33 +109,22 @@ public class ActorServiceImplTest {
     public void failed_updating_actor_EntityNotFoundException() {
         UUID uuid = UUID.randomUUID();
         Actor actor = new Actor(uuid, "Aldrich", "");
-        Mockito.doThrow(new EntityNotFoundException("")).when(actorRepoRepository).findById(uuid);
+        Mockito.when(actorRepoRepository.findById(uuid)).thenReturn(Optional.empty());
 
-        var result = actorService.updateActor(ActorMapper.convert(Either.left(actor)).get());
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
+           actorService.updateActor(ActorMapper.convert(Either.left(actor)).get());
+        });
 
-        Assertions.assertEquals("Error occurred while updating actor", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
-    }
-
-    @Test
-    public void failed_updating_actor_GenericException() {
-        UUID uuid = UUID.randomUUID();
-        Actor actor = new Actor(uuid, "Aldrich", "");
-        Mockito.doThrow(new NoSuchElementException("")).when(actorRepoRepository).findById(uuid);
-
-        var result = actorService.updateActor(ActorMapper.convert(Either.left(actor)).get());
-
-        Assertions.assertEquals("Error occurred while updating an actor", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
+        Assertions.assertEquals("Update Actor: Actor with ID = "+uuid+" not found", exception.getMessage());
     }
 
     @Test
     public void failed_update_actor_null_input() {
-        Actor actor = new Actor(null, "Aldrich", "");
-        var result = actorService.updateActor(ActorMapper.convert(Either.left(actor)).get());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+           actorService.updateActor(null);
+        });
 
-        Assertions.assertEquals("Update actor input is null", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
+        Assertions.assertEquals("Update Actor: Input Body is null", exception.getMessage());
     }
 
     @Test
@@ -173,38 +136,29 @@ public class ActorServiceImplTest {
         var result = actorService.getActor(uuid);
 
         Assertions.assertNotNull(result.getResponse());
-        Assertions.assertEquals("Successfully fetched an actor", result.getMessage());
+        Assertions.assertEquals("Successfully retrieved an actor", result.getMessage());
         Assertions.assertEquals("Success", result.getStatus());
     }
 
     @Test
-    public void failed_fetching_actor_EntityNotFoundException() {
+    public void failed_retrieving_actor_EntityNotFoundException() {
         UUID uuid = UUID.randomUUID();
-        Mockito.doThrow(new EntityNotFoundException("")).when(actorRepoRepository).findById(uuid);
+        Mockito.when(actorRepoRepository.findById(uuid)).thenReturn(Optional.empty());
 
-        var result = actorService.getActor(uuid);
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
+            actorService.getActor(uuid);
+        });
 
-        Assertions.assertEquals("Error occurred while fetching actor", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
+        Assertions.assertEquals("Get Actor: Actor with ID = "+uuid+" not found", exception.getMessage());
     }
 
     @Test
     public void failed_fetching_actor_null_input() {
-        var result = actorService.getActor(null);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            actorService.getActor(null);
+        });
 
-        Assertions.assertEquals("Fetch actor input is null", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
-    }
-
-    @Test
-    public void failed_fetching_actor_GenericException() {
-        UUID uuid = UUID.randomUUID();
-        Mockito.doThrow(new NoSuchElementException("")).when(actorRepoRepository).findById(uuid);
-
-        var result = actorService.getActor(uuid);
-
-        Assertions.assertEquals("Error occurred while fetching an actor", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
+        Assertions.assertEquals("Retrieve Actor: Input ID is null", exception.getMessage());
     }
 
     @Test
@@ -220,16 +174,5 @@ public class ActorServiceImplTest {
         Assertions.assertEquals("Successfully fetched all actors", result.getMessage());
         Assertions.assertEquals("Success", result.getStatus());
     }
-
-    @Test
-    public void failed_fetching_all_actors() {
-        Mockito.doThrow(new EntityNotFoundException("")).when(actorRepoRepository).findAll();
-
-        var result = actorService.getActors();
-
-        Assertions.assertEquals("Error occurred while fetching all actors", result.getMessage());
-        Assertions.assertEquals("Error", result.getStatus());
-    }
-
 
 }

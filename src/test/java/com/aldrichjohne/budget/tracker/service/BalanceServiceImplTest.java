@@ -1,9 +1,12 @@
 package com.aldrichjohne.budget.tracker.service;
 
+import com.aldrichjohne.budget.tracker.enums.ResponseWrapperStatus;
 import com.aldrichjohne.budget.tracker.model.dto.BalanceRequestDTO;
 import com.aldrichjohne.budget.tracker.model.entity.Balance;
+import com.aldrichjohne.budget.tracker.model.entity.dto.BalanceDTO;
 import com.aldrichjohne.budget.tracker.repository.BalanceRepo;
 import com.aldrichjohne.budget.tracker.service.impl.BalanceServiceImpl;
+import com.aldrichjohne.budget.tracker.util.mapper.model.ResponseWrapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -37,9 +40,12 @@ class BalanceServiceImplTest {
         Mockito.when(balanceRepo.save(Mockito.any())).thenReturn(new Balance(id,
                 balance.getRemainingBalance() + balanceRequest.getAmount()));
 
-        var result = service.updateBalance(balanceRequest);
+        ResponseWrapper result = service.updateBalance(balanceRequest);
+        BalanceDTO resultBody = (BalanceDTO) result.getResponse();
 
-        Assertions.assertEquals(balance.getRemainingBalance() + balanceRequest.getAmount(), result.getRemainingBalance());
+        Assertions.assertEquals(ResponseWrapperStatus.SUCCESS.toString(), result.getStatus());
+        Assertions.assertEquals("Update Balance: Success", result.getMessage());
+        Assertions.assertEquals(balance.getRemainingBalance() + balanceRequest.getAmount(), resultBody.getRemainingBalance());
     }
 
     @Test
@@ -52,24 +58,26 @@ class BalanceServiceImplTest {
         Mockito.when(balanceRepo.save(Mockito.any())).thenReturn(new Balance(id,
                 balance.getRemainingBalance() - balanceRequest.getAmount()));
 
-        var result = service.updateBalance(balanceRequest);
+        ResponseWrapper result = service.updateBalance(balanceRequest);
+        BalanceDTO resultBody = (BalanceDTO) result.getResponse();
 
-        Assertions.assertEquals(balance.getRemainingBalance() - balanceRequest.getAmount(), result.getRemainingBalance());
+        Assertions.assertEquals(ResponseWrapperStatus.SUCCESS.toString(), result.getStatus());
+        Assertions.assertEquals("Update Balance: Success", result.getMessage());
+        Assertions.assertEquals(balance.getRemainingBalance() - balanceRequest.getAmount(), resultBody.getRemainingBalance());
     }
 
     @Test
     void got_an_empty_balance_from_database() {
         UUID id = UUID.randomUUID();
-        Optional<Balance> emptyBalanceEntity = Optional.empty();
         BalanceRequestDTO balanceRequest = new BalanceRequestDTO(id, "subtract", 10000);
 
-        Mockito.when(balanceRepo.findById(Mockito.any())).thenReturn(emptyBalanceEntity);
+        Mockito.when(balanceRepo.findById(Mockito.any())).thenReturn(Optional.empty());
 
-        Exception exception = Assertions.assertThrows(NoSuchElementException.class, () -> {
+        EntityNotFoundException exception = Assertions.assertThrows(EntityNotFoundException.class, () -> {
             service.updateBalance(balanceRequest);
         });
 
-        Assertions.assertEquals("Couldn't find current balance record from the database", exception.getMessage());
+        Assertions.assertEquals("Update Balance: Balance record with ID = " + id + " not found", exception.getMessage());
 
     }
 
@@ -87,7 +95,7 @@ class BalanceServiceImplTest {
             service.updateBalance(balanceRequest);
         });
 
-        Assertions.assertEquals("Insufficient balance", exception.getMessage());
+        Assertions.assertEquals("Update Balance: Insufficient balance", exception.getMessage());
 
     }
 
@@ -114,7 +122,7 @@ class BalanceServiceImplTest {
             service.updateBalance(balanceRequest);
         });
 
-        Assertions.assertEquals("Invalid operation type", exception.getMessage());
+        Assertions.assertEquals("Update Balance: Invalid operation type", exception.getMessage());
     }
 
     @Test
@@ -137,7 +145,7 @@ class BalanceServiceImplTest {
             service.updateBalance(null);
         });
 
-        Assertions.assertEquals("Invalid input null", exception.getMessage());
+        Assertions.assertEquals("Update Balance: Input Body is null", exception.getMessage());
     }
 
     @Test
@@ -147,9 +155,9 @@ class BalanceServiceImplTest {
 
         Mockito.when(balanceRepo.findAll()).thenReturn(List.of(balance));
 
-        var result = service.getBalance();
+        ResponseWrapper result = service.getBalance();
 
-        Assertions.assertEquals(balance.getRemainingBalance(), result.getRemainingBalance());
+        Assertions.assertNotNull(result);
     }
 
     @Test

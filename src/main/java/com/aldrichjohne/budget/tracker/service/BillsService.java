@@ -9,6 +9,7 @@ import java.util.UUID;
 public interface BillsService {
     ResponseWrapper addBill(BillsDTO dto);
     ResponseWrapper removeBill(UUID id);
+    ResponseWrapper softRemoveBill(UUID uuid);
     ResponseWrapper updateBill(BillsDTO dto);
     ResponseWrapper getBill(UUID id);
     ResponseWrapper getBillWithoutDeleted();

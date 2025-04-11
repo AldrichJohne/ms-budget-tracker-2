@@ -2,7 +2,6 @@ package com.aldrichjohne.budget.tracker.service;
 
 import com.aldrichjohne.budget.tracker.enums.ResponseWrapperStatus;
 import com.aldrichjohne.budget.tracker.model.entity.Bills;
-import com.aldrichjohne.budget.tracker.model.entity.dto.BillsDTO;
 import com.aldrichjohne.budget.tracker.repository.BillRepo;
 import com.aldrichjohne.budget.tracker.service.impl.BillServiceImpl;
 import com.aldrichjohne.budget.tracker.util.mapper.BillsMapper;
@@ -15,11 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,6 +40,17 @@ public class BillServiceImplTest {
         Assertions.assertEquals("Add Bill: Success", result.getMessage());
     }
 
+    @Test
+    void unsuccessful_adding_bill_duplicate_record() {
+        Bills bill = new Bills(UUID.randomUUID(), "Electric Bill", 4000, false);
+        Mockito.when(repo.findByName(bill.getName())).thenReturn(Optional.of(bill));
+
+        var result = service.addBill(BillsMapper.convert(Either.left(bill)).get());
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals("Add Bill: Unsuccessful: Bill already exists", result.getMessage());
+    }
+
 
     @Test
     void failed_adding_bill_null_input() {
@@ -61,7 +69,19 @@ public class BillServiceImplTest {
         Mockito.when(repo.save(bill)).thenReturn(new Bills(uuid, "E-bill", 4000, true));
 
         var result = service.removeBill(uuid);
-        Assertions.assertEquals("SUCCESS", result.getStatus());
+        Assertions.assertEquals("OK", result.getStatus());
+
+    }
+
+    @Test
+    void success_soft_deleting_bill() {
+        UUID uuid = UUID.randomUUID();
+        Bills bill = new Bills(uuid, "E-bill", 4000, false);
+        Mockito.when(repo.findById(uuid)).thenReturn(Optional.of(bill));
+        Mockito.when(repo.save(bill)).thenReturn(new Bills(uuid, "E-bill", 4000, true));
+
+        var result = service.softRemoveBill(uuid);
+        Assertions.assertEquals("OK", result.getStatus());
 
     }
 
@@ -76,9 +96,28 @@ public class BillServiceImplTest {
     }
 
     @Test
+    void failed_soft_deleting_bill_EntityNotFoundException() {
+        UUID uuid = UUID.randomUUID();
+        Mockito.when(repo.findById(uuid)).thenReturn(Optional.empty());
+
+        Assertions.assertThrows(EntityNotFoundException.class, () -> {
+            service.softRemoveBill(uuid);
+        });
+    }
+
+    @Test
     void failed_deleting_bill_null_input() {
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
             service.removeBill(null);
+        });
+
+        Assertions.assertEquals("Remove Bill: Input ID is null", exception.getMessage());
+    }
+
+    @Test
+    void failed_soft_deleting_bill_null_input() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            service.softRemoveBill(null);
         });
 
         Assertions.assertEquals("Remove Bill: Input ID is null", exception.getMessage());
@@ -92,7 +131,7 @@ public class BillServiceImplTest {
         Mockito.when(repo.save(bill)).thenReturn(bill);
 
         var result = service.updateBill(BillsMapper.convert(Either.left(bill)).get());
-        ResponseWrapper expected = new ResponseWrapper(BillsMapper.convert(Either.left(bill)).get(), ResponseWrapperStatus.SUCCESS.toString(), "Update Bill: Success");
+        ResponseWrapper expected = new ResponseWrapper(BillsMapper.convert(Either.left(bill)).get(), ResponseWrapperStatus.OK.toString(), "Update Bill: Success");
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(expected, result);
@@ -124,7 +163,7 @@ public class BillServiceImplTest {
         UUID uuid = UUID.randomUUID();
         Bills bill = new Bills(uuid, "E-Bill", 4000, false);
         Mockito.when(repo.findById(uuid)).thenReturn(Optional.of(bill));
-        ResponseWrapper expected = new ResponseWrapper(BillsMapper.convert(Either.left(bill)).get(), ResponseWrapperStatus.SUCCESS.toString(), "Retrieve Bill: Success");
+        ResponseWrapper expected = new ResponseWrapper(BillsMapper.convert(Either.left(bill)).get(), ResponseWrapperStatus.OK.toString(), "Retrieve Bill: Success");
 
         var result = service.getBill(uuid);
 

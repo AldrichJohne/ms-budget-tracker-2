@@ -10,11 +10,13 @@ import com.aldrichjohne.budget.tracker.util.mapper.BalanceMapper;
 import com.aldrichjohne.budget.tracker.util.mapper.model.ResponseWrapper;
 import io.vavr.control.Either;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.stereotype.Service;
 
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.UUID;
 
+@Service
 public class BalanceServiceImpl implements BalanceService {
 
     private final BalanceRepo balanceRepo;
@@ -48,7 +50,7 @@ public class BalanceServiceImpl implements BalanceService {
 
         return new ResponseWrapper(
                 Objects.requireNonNull(BalanceMapper.convert(Either.left(newBalanceEntity))).get(),
-                ResponseWrapperStatus.SUCCESS.toString(),
+                ResponseWrapperStatus.OK.toString(),
                 "Update Balance: Success"
         );
     }
@@ -69,7 +71,7 @@ public class BalanceServiceImpl implements BalanceService {
     @Override
     public ResponseWrapper getBalance() {
         return new ResponseWrapper(
-                balanceRepo.findAll().getFirst(), ResponseWrapperStatus.SUCCESS.toString(), "Retrieve Balance: Success"
+                balanceRepo.findAll().getFirst(), ResponseWrapperStatus.OK.toString(), "Retrieve Balance: Success"
         );
     }
 }

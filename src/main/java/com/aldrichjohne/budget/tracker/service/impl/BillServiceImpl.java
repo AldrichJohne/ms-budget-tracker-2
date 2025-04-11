@@ -10,12 +10,15 @@ import com.aldrichjohne.budget.tracker.util.mapper.model.ResponseWrapper;
 import io.vavr.control.Either;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
+@Service
 public class BillServiceImpl implements BillsService {
     private final BillRepo billRepo;
 
@@ -29,11 +32,21 @@ public class BillServiceImpl implements BillsService {
             throw new IllegalArgumentException("Add Bill: Input is null");
         }
 
+        Optional<Bills> existingDuplicate = billRepo.findByName(bill.getName());
+
+        if (existingDuplicate.isPresent()) {
+            log.info("Add Bill: Unsuccessful: Bill already exists");
+            return new ResponseWrapper(
+                    existingDuplicate.get(),
+                    ResponseWrapperStatus.OK.toString(),
+                    "Add Bill: Unsuccessful: Bill already exists");
+        }
+
         Bills bills = billRepo.save(Objects.requireNonNull(BillsMapper.convert(Either.right(bill))).getLeft());
         log.info("Add Bill: Success: {}", bills);
         return new ResponseWrapper(
                 Objects.requireNonNull(BillsMapper.convert(Either.left(bills))).get(),
-                ResponseWrapperStatus.SUCCESS.toString(),
+                ResponseWrapperStatus.OK.toString(),
                 "Add Bill: Success"
         );
     }
@@ -49,7 +62,26 @@ public class BillServiceImpl implements BillsService {
         log.info("Delete Bill: Success: {}", bills);
 
         return new ResponseWrapper(
-                bills, ResponseWrapperStatus.SUCCESS.toString(), "Delete Bill: Success");
+                Objects.requireNonNull(BillsMapper.convert(Either.left(bills))).get(),
+                ResponseWrapperStatus.OK.toString(),
+                "Delete Bill: Success");
+    }
+
+    @Override
+    public ResponseWrapper softRemoveBill(UUID id) {
+        if (Objects.isNull(id)) {
+            throw new IllegalArgumentException("Remove Bill: Input ID is null");
+        }
+
+        Bills bills = billRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Soft Remove Bill: Bill with ID = " + id + "not found"));
+        bills.setDeleted(true);
+        billRepo.save(bills);
+        log.info("Soft Delete Bill: Success: {}", bills);
+
+        return new ResponseWrapper(
+                Objects.requireNonNull(BillsMapper.convert(Either.left(bills))).get(),
+                ResponseWrapperStatus.OK.toString(),
+                "Soft Delete Bill: Success");
     }
 
     @Override
@@ -63,7 +95,7 @@ public class BillServiceImpl implements BillsService {
         log.info("Update Bill: Success: {}", dto);
         return new ResponseWrapper(
                 Objects.requireNonNull(BillsMapper.convert(Either.left(billsUpdatedValue))).get(),
-                ResponseWrapperStatus.SUCCESS.toString(),
+                ResponseWrapperStatus.OK.toString(),
                 "Update Bill: Success"
         );
     }
@@ -79,7 +111,7 @@ public class BillServiceImpl implements BillsService {
 
         return new ResponseWrapper(
                 Objects.requireNonNull(BillsMapper.convert(Either.left(bills))).get(),
-                ResponseWrapperStatus.SUCCESS.toString(),
+                ResponseWrapperStatus.OK.toString(),
                 "Retrieve Bill: Success"
         );
     }
@@ -87,11 +119,11 @@ public class BillServiceImpl implements BillsService {
     @Override
     public ResponseWrapper getBillWithoutDeleted() {
         List<BillsDTO> billsList = billRepo.findAll().stream()
-                .filter(Bills::isDeleted)
+                .filter(b -> !b.isDeleted())
                 .map(b -> Objects.requireNonNull(BillsMapper.convert(Either.left(b))).get())
                 .toList();
 
-        return new ResponseWrapper(billsList, ResponseWrapperStatus.SUCCESS.toString(), "Retrieve Bills without deleted: Success");
+        return new ResponseWrapper(billsList, ResponseWrapperStatus.OK.toString(), "Retrieve Bills without deleted: Success");
     }
 
     @Override
@@ -100,6 +132,7 @@ public class BillServiceImpl implements BillsService {
                 .map(b -> Objects.requireNonNull(BillsMapper.convert(Either.left(b))).get())
                 .toList();
 
-        return new ResponseWrapper(billsList, ResponseWrapperStatus.SUCCESS.toString(), "Retrieve All Bills: Success");
+        return new ResponseWrapper(billsList, ResponseWrapperStatus.OK.toString(), "Retrieve All Bills: Success");
     }
+
 }

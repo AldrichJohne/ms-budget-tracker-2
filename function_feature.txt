@@ -1,0 +1,38 @@
+🧱 1. Bills (the core category)
+This is your main table for defining types of expenses (e.g., rent, food, subscriptions).
+Other entities like OutFlow, CurrentMonth, and BudgetAndActual reference this.
+Think of it as your "category manager."
+
+💸 2. OutFlow (tracks actual spending)
+Each record = one spending entry (e.g., “Paid ₱1500 for electricity”).
+Linked to Bills → tells you what bill the money was spent on.
+
+✅ How it works with Bills:
+You can query:
+👉 "Show me all spending under 'Food'" → use the bill.id reference.
+
+💰 3. InFlow (tracks incoming money)
+Actor person   ← 🔗 many-to-one
+Represents income transactions (e.g., salary, side hustle, etc.)
+Not directly tied to Bills, but is part of your overall balance logic.
+
+📆 4. CurrentMonth (planned monthly budgets)
+Tracks the budgeted amount for a bill in the current month.
+Used for comparing actual spending (from OutFlow) against monthly expectations.
+✅ Works with:
+Bills → to know what you're budgeting for.
+Your app can use this for monthly budget planning screens.
+
+📊 5. BudgetAndActual (comparison data)
+This is a summary table used to compare:
+What was budgeted (budget)
+What was actually spent (actualOutFlow)
+The difference
+✅ Generated from:
+CurrentMonth (for budget)
+OutFlow (for actuals)
+Use this for monthly budget performance reports.
+
+🧮 6. Balance (what's left)
+Just tracks the remaining money (e.g., wallet or account balance).
+Likely updated whenever an InFlow or OutFlow is recorded.

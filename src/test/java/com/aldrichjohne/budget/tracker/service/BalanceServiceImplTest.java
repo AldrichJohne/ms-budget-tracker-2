@@ -43,7 +43,7 @@ class BalanceServiceImplTest {
         ResponseWrapper result = service.updateBalance(balanceRequest);
         BalanceDTO resultBody = (BalanceDTO) result.getResponse();
 
-        Assertions.assertEquals(ResponseWrapperStatus.SUCCESS.toString(), result.getStatus());
+        Assertions.assertEquals(ResponseWrapperStatus.OK.toString(), result.getStatus());
         Assertions.assertEquals("Update Balance: Success", result.getMessage());
         Assertions.assertEquals(balance.getRemainingBalance() + balanceRequest.getAmount(), resultBody.getRemainingBalance());
     }
@@ -61,7 +61,7 @@ class BalanceServiceImplTest {
         ResponseWrapper result = service.updateBalance(balanceRequest);
         BalanceDTO resultBody = (BalanceDTO) result.getResponse();
 
-        Assertions.assertEquals(ResponseWrapperStatus.SUCCESS.toString(), result.getStatus());
+        Assertions.assertEquals(ResponseWrapperStatus.OK.toString(), result.getStatus());
         Assertions.assertEquals("Update Balance: Success", result.getMessage());
         Assertions.assertEquals(balance.getRemainingBalance() - balanceRequest.getAmount(), resultBody.getRemainingBalance());
     }

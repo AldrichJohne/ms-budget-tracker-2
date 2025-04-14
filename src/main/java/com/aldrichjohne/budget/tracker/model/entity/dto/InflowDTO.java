@@ -1,7 +1,6 @@
 package com.aldrichjohne.budget.tracker.model.entity.dto;
 
 import com.aldrichjohne.budget.tracker.model.entity.Actor;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

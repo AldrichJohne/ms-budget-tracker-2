@@ -36,3 +36,5 @@ Use this for monthly budget performance reports.
 🧮 6. Balance (what's left)
 Just tracks the remaining money (e.g., wallet or account balance).
 Likely updated whenever an InFlow or OutFlow is recorded.
+
+7. BalanceHistory

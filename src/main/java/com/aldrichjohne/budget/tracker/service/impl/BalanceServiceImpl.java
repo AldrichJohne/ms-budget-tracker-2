@@ -70,8 +70,11 @@ public class BalanceServiceImpl implements BalanceService {
 
     @Override
     public ResponseWrapper getBalance() {
+        Balance currentBalance = balanceRepo.findAll().getFirst();
         return new ResponseWrapper(
-                balanceRepo.findAll().getFirst(), ResponseWrapperStatus.OK.toString(), "Retrieve Balance: Success"
+                Objects.requireNonNull(BalanceMapper.convert(Either.left(currentBalance))).get(),
+                ResponseWrapperStatus.OK.toString(),
+                "Retrieve Balance: Success"
         );
     }
 }

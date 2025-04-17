@@ -27,6 +27,9 @@ class BalanceServiceImplTest {
     @Mock
     BalanceRepo balanceRepo;
 
+    @Mock
+    BalanceHistoryService balanceHistoryService;
+
     @InjectMocks
     BalanceServiceImpl service;
 
@@ -39,8 +42,9 @@ class BalanceServiceImplTest {
         Mockito.when(balanceRepo.findById(Mockito.any())).thenReturn(Optional.of(balance));
         Mockito.when(balanceRepo.save(Mockito.any())).thenReturn(new Balance(id,
                 balance.getRemainingBalance() + balanceRequest.getAmount()));
+        Mockito.when(balanceRepo.findAll()).thenReturn(List.of(new Balance(id, 0)));
 
-        ResponseWrapper result = service.updateBalance(balanceRequest);
+        ResponseWrapper result = service.updateBalance(balanceRequest, UUID.randomUUID().toString());
         BalanceDTO resultBody = (BalanceDTO) result.getResponse();
 
         Assertions.assertEquals(ResponseWrapperStatus.OK.toString(), result.getStatus());
@@ -57,8 +61,9 @@ class BalanceServiceImplTest {
         Mockito.when(balanceRepo.findById(Mockito.any())).thenReturn(Optional.of(balance));
         Mockito.when(balanceRepo.save(Mockito.any())).thenReturn(new Balance(id,
                 balance.getRemainingBalance() - balanceRequest.getAmount()));
+        Mockito.when(balanceRepo.findAll()).thenReturn(List.of(new Balance(id, 0)));
 
-        ResponseWrapper result = service.updateBalance(balanceRequest);
+        ResponseWrapper result = service.updateBalance(balanceRequest, UUID.randomUUID().toString());
         BalanceDTO resultBody = (BalanceDTO) result.getResponse();
 
         Assertions.assertEquals(ResponseWrapperStatus.OK.toString(), result.getStatus());
@@ -71,10 +76,12 @@ class BalanceServiceImplTest {
         UUID id = UUID.randomUUID();
         BalanceRequestDTO balanceRequest = new BalanceRequestDTO(id, "subtract", 10000);
 
+
         Mockito.when(balanceRepo.findById(Mockito.any())).thenReturn(Optional.empty());
+        Mockito.when(balanceRepo.findAll()).thenReturn(List.of(new Balance(id, 0)));
 
         EntityNotFoundException exception = Assertions.assertThrows(EntityNotFoundException.class, () -> {
-            service.updateBalance(balanceRequest);
+            service.updateBalance(balanceRequest, UUID.randomUUID().toString());
         });
 
         Assertions.assertEquals("Update Balance: Balance record with ID = " + id + " not found", exception.getMessage());
@@ -88,11 +95,12 @@ class BalanceServiceImplTest {
         BalanceRequestDTO balanceRequest = new BalanceRequestDTO(id, "subtract", 10000);
 
         Mockito.when(balanceRepo.findById(Mockito.any())).thenReturn(Optional.of(balance));
+        Mockito.when(balanceRepo.findAll()).thenReturn(List.of(new Balance(id, 0)));
 
 
 
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class , () -> {
-            service.updateBalance(balanceRequest);
+            service.updateBalance(balanceRequest, UUID.randomUUID().toString());
         });
 
         Assertions.assertEquals("Update Balance: Insufficient balance", exception.getMessage());
@@ -104,9 +112,10 @@ class BalanceServiceImplTest {
         UUID id = UUID.randomUUID();
         BalanceRequestDTO balanceRequest = new BalanceRequestDTO(id, "add", 10000);
         Mockito.doThrow(new EntityNotFoundException()).when(balanceRepo).findById(Mockito.any());
+        Mockito.when(balanceRepo.findAll()).thenReturn(List.of(new Balance(id, 0)));
 
         Assertions.assertThrows(EntityNotFoundException.class, () -> {
-            service.updateBalance(balanceRequest);
+            service.updateBalance(balanceRequest, UUID.randomUUID().toString());
         });
     }
 
@@ -117,9 +126,10 @@ class BalanceServiceImplTest {
         BalanceRequestDTO balanceRequest = new BalanceRequestDTO(id, "multiply", 10000);
 
         Mockito.when(balanceRepo.findById(Mockito.any())).thenReturn(Optional.of(balance));
+        Mockito.when(balanceRepo.findAll()).thenReturn(List.of(new Balance(id, 0)));
 
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            service.updateBalance(balanceRequest);
+            service.updateBalance(balanceRequest, UUID.randomUUID().toString());
         });
 
         Assertions.assertEquals("Update Balance: Invalid operation type", exception.getMessage());
@@ -132,7 +142,7 @@ class BalanceServiceImplTest {
         Mockito.doThrow(new NoSuchElementException("")).when(balanceRepo).findById(Mockito.any());
 
         Assertions.assertThrows(NoSuchElementException.class, () -> {
-            service.updateBalance(balanceRequest);
+            service.updateBalance(balanceRequest, UUID.randomUUID().toString());
         });
 
     }
@@ -142,30 +152,10 @@ class BalanceServiceImplTest {
 
 
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class , () -> {
-            service.updateBalance(null);
+            service.updateBalance(null, UUID.randomUUID().toString());
         });
 
         Assertions.assertEquals("Update Balance: Input Body is null", exception.getMessage());
     }
 
-    @Test
-    void success_fetching_all_balance() {
-        UUID id = UUID.randomUUID();
-        Balance balance = new Balance(id, 25000);
-
-        Mockito.when(balanceRepo.findAll()).thenReturn(List.of(balance));
-
-        ResponseWrapper result = service.getBalance();
-
-        Assertions.assertNotNull(result);
-    }
-
-    @Test
-    void failed_fetching_all_actors() {
-        Mockito.doThrow(new EntityNotFoundException("")).when(balanceRepo).findAll();
-
-        Assertions.assertThrows(EntityNotFoundException.class, () -> {
-            throw new EntityNotFoundException();
-        });
-    }
 }

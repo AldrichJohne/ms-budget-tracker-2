@@ -2,6 +2,7 @@ package com.aldrichjohne.budget.tracker.service;
 
 import com.aldrichjohne.budget.tracker.model.entity.Actor;
 import com.aldrichjohne.budget.tracker.repository.ActorRepo;
+import com.aldrichjohne.budget.tracker.service.helper.ActorHelper;
 import com.aldrichjohne.budget.tracker.service.impl.ActorServiceImpl;
 import com.aldrichjohne.budget.tracker.util.mapper.ActorMapper;
 import io.vavr.control.Either;
@@ -27,6 +28,9 @@ public class ActorServiceImplTest {
     @Mock
     ActorRepo actorRepoRepository;
 
+    @Mock
+    ActorHelper helper;
+
     @InjectMocks
     ActorServiceImpl actorService;
 
@@ -39,7 +43,7 @@ public class ActorServiceImplTest {
 
         Assertions.assertNotNull(result.getResponse());
         Assertions.assertEquals("Successfully added an actor", result.getMessage());
-        Assertions.assertEquals("Success", result.getStatus());
+        Assertions.assertEquals("OK", result.getStatus());
     }
 
     @Test
@@ -58,13 +62,14 @@ public class ActorServiceImplTest {
         Actor actor = new Actor(uuid, "Aldrich", "");
         Mockito.when(actorRepoRepository.findById(uuid)).thenReturn(Optional.of(actor));
         Mockito.doNothing().when(actorRepoRepository).delete(actor);
+        Mockito.when(helper.findActorOrThrow(Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(actor);
 
 
         var result = actorService.removeActor(uuid);
 
         Assertions.assertNotNull(result.getResponse());
         Assertions.assertEquals("Delete Actor: Success", result.getMessage());
-        Assertions.assertEquals("Success", result.getStatus());
+        Assertions.assertEquals("OK", result.getStatus());
     }
 
     @Test
@@ -72,6 +77,7 @@ public class ActorServiceImplTest {
         UUID uuid = UUID.randomUUID();
 
         Mockito.when(actorRepoRepository.findById(uuid)).thenReturn(Optional.empty());
+        Mockito.when(helper.findActorOrThrow(Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenThrow(new EntityNotFoundException("Delete Actor: Actor with ID = " + uuid + " not found"));
 
         EntityNotFoundException thrownException = assertThrows(EntityNotFoundException.class, () -> {
             actorService.removeActor(uuid);
@@ -83,6 +89,8 @@ public class ActorServiceImplTest {
 
     @Test
     public void failed_deleting_actor_null_input() {
+
+        Mockito.when(helper.findActorOrThrow(Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenThrow(new IllegalArgumentException("Delete Actor: Input ID is null"));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             actorService.removeActor(null);
@@ -110,6 +118,10 @@ public class ActorServiceImplTest {
         UUID uuid = UUID.randomUUID();
         Actor actor = new Actor(uuid, "Aldrich", "");
         Mockito.when(actorRepoRepository.findById(uuid)).thenReturn(Optional.empty());
+        Mockito.when(helper.findActorOrThrow(Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenThrow(
+                new EntityNotFoundException("Update Actor: Actor with ID = " + uuid + " not found")
+        );
+        Mockito.when(actorRepoRepository.save(Mockito.any())).thenReturn(actor);
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
            actorService.updateActor(ActorMapper.convert(Either.left(actor)).get());
@@ -132,6 +144,9 @@ public class ActorServiceImplTest {
         UUID uuid = UUID.randomUUID();
         Actor actor = new Actor(uuid, "Aldrich", "");
         Mockito.when(actorRepoRepository.findById(uuid)).thenReturn(Optional.of(actor));
+        Mockito.when(helper.findActorOrThrow(
+                Mockito.any(), Mockito.anyString(), Mockito.anyString()
+        )).thenReturn(actor);
 
         var result = actorService.getActor(uuid);
 
@@ -144,16 +159,22 @@ public class ActorServiceImplTest {
     public void failed_retrieving_actor_EntityNotFoundException() {
         UUID uuid = UUID.randomUUID();
         Mockito.when(actorRepoRepository.findById(uuid)).thenReturn(Optional.empty());
+        Mockito.when(helper.findActorOrThrow(
+                Mockito.any(), Mockito.anyString(), Mockito.anyString()
+        )).thenThrow(new EntityNotFoundException("Retrieve Actor: Actor with ID = " + uuid + " not found"));
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
             actorService.getActor(uuid);
         });
 
-        Assertions.assertEquals("Get Actor: Actor with ID = "+uuid+" not found", exception.getMessage());
+        Assertions.assertEquals("Retrieve Actor: Actor with ID = "+uuid+" not found", exception.getMessage());
     }
 
     @Test
     public void failed_fetching_actor_null_input() {
+        Mockito.when(helper.findActorOrThrow(
+                Mockito.any(), Mockito.anyString(), Mockito.anyString()
+        )).thenThrow(new IllegalArgumentException("Retrieve Actor: Input ID is null"));
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             actorService.getActor(null);
         });

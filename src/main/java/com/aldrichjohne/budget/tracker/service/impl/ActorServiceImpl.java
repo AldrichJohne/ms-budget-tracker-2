@@ -9,7 +9,6 @@ import com.aldrichjohne.budget.tracker.service.helper.ActorHelper;
 import com.aldrichjohne.budget.tracker.util.mapper.ActorMapper;
 import com.aldrichjohne.budget.tracker.util.mapper.model.ResponseWrapper;
 import io.vavr.control.Either;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

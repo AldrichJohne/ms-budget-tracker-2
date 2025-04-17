@@ -7,6 +7,7 @@ import com.aldrichjohne.budget.tracker.model.entity.Actor;
 import com.aldrichjohne.budget.tracker.model.entity.InFlow;
 import com.aldrichjohne.budget.tracker.model.entity.dto.BalanceDTO;
 import com.aldrichjohne.budget.tracker.repository.InFlowRepo;
+import com.aldrichjohne.budget.tracker.service.helper.ActorHelper;
 import com.aldrichjohne.budget.tracker.service.impl.InFlowServiceImpl;
 import com.aldrichjohne.budget.tracker.util.mapper.InFlowMapper;
 import com.aldrichjohne.budget.tracker.util.mapper.model.ResponseWrapper;
@@ -19,7 +20,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -27,6 +28,9 @@ import java.util.UUID;
 public class InFlowRepoServiceTest {
     @InjectMocks
     InFlowServiceImpl service;
+
+    @Mock
+    ActorHelper actorHelper;
 
     @Mock
     InFlowRepo repo;
@@ -37,8 +41,8 @@ public class InFlowRepoServiceTest {
     @Test
     void addCash() throws IllegalAccessException {
         Actor actor = new Actor(UUID.fromString("e20e728c-bc30-4990-b7f1-285f7ec1fcc4"), "AJ", "");
-        InFlow inflow = new InFlow(UUID.randomUUID(), new Date(System.currentTimeMillis()), 35000.00, actor, "15th Salary");
-        Mockito.when(repo.save(inflow)).thenReturn(inflow);
+        InFlow inflow = new InFlow(UUID.randomUUID(), LocalDateTime.now(), 35000.00, actor.getId().toString(), "15th Salary");
+        Mockito.when(repo.save(Mockito.any())).thenReturn(inflow);
         Mockito.when(balanceService.updateBalance(Mockito.any(), Mockito.any())).thenReturn(new ResponseWrapper(
                 new BalanceDTO(null, 35000), ResponseWrapperStatus.OK.name(), "Update Balance: Success"));
 
@@ -47,5 +51,12 @@ public class InFlowRepoServiceTest {
 
         Assertions.assertEquals(35000.00, resultDto.getUpdatedBalance().getRemainingBalance());
 
+    }
+
+    @Test
+    void addCash_Null_Input() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            service.addCash(null);
+        });
     }
 }

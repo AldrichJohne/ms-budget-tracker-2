@@ -19,7 +19,7 @@ public class InFlowMapper {
                     toConvert.getLeft().getId(),
                     toConvert.getLeft().getDate(),
                     toConvert.getLeft().getAmount(),
-                    toConvert.getLeft().getPerson(),
+                    toConvert.getLeft().getUserId(),
                     toConvert.getLeft().getRemarks()
             ));
         } else {
@@ -27,7 +27,7 @@ public class InFlowMapper {
                     toConvert.get().getId(),
                     toConvert.get().getDate(),
                     toConvert.get().getAmount(),
-                    toConvert.get().getPerson(),
+                    toConvert.get().getUserId(),
                     toConvert.get().getRemarks()
             ));
         }

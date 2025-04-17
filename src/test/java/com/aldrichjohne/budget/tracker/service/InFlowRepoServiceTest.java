@@ -39,7 +39,7 @@ public class InFlowRepoServiceTest {
         Actor actor = new Actor(UUID.fromString("e20e728c-bc30-4990-b7f1-285f7ec1fcc4"), "AJ", "");
         InFlow inflow = new InFlow(UUID.randomUUID(), new Date(System.currentTimeMillis()), 35000.00, actor, "15th Salary");
         Mockito.when(repo.save(inflow)).thenReturn(inflow);
-        Mockito.when(balanceService.updateBalance(Mockito.any())).thenReturn(new ResponseWrapper(
+        Mockito.when(balanceService.updateBalance(Mockito.any(), Mockito.any())).thenReturn(new ResponseWrapper(
                 new BalanceDTO(null, 35000), ResponseWrapperStatus.OK.name(), "Update Balance: Success"));
 
         ResponseWrapper result = service.addCash(Objects.requireNonNull(InFlowMapper.convert(Either.left(inflow))).get());

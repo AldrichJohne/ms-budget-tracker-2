@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -15,12 +15,8 @@ public class InFlow {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-    private Date date;
+    private LocalDateTime date;
     private double amount;
-
-    @ManyToOne
-    @JoinColumn(name = "person", referencedColumnName = "id")
-    private Actor person;
-
+    private String userId;
     private String remarks;
 }

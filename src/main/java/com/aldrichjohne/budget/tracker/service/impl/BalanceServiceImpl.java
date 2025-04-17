@@ -4,14 +4,20 @@ import com.aldrichjohne.budget.tracker.enums.ResponseWrapperStatus;
 import com.aldrichjohne.budget.tracker.model.dto.BalanceRequestDTO;
 import com.aldrichjohne.budget.tracker.model.entity.Balance;
 import com.aldrichjohne.budget.tracker.model.entity.dto.BalanceDTO;
+import com.aldrichjohne.budget.tracker.model.entity.dto.BalanceHistoryDTO;
 import com.aldrichjohne.budget.tracker.repository.BalanceRepo;
+import com.aldrichjohne.budget.tracker.service.BalanceHistoryService;
 import com.aldrichjohne.budget.tracker.service.BalanceService;
+import com.aldrichjohne.budget.tracker.service.BalanceQueryService;
 import com.aldrichjohne.budget.tracker.util.mapper.BalanceMapper;
 import com.aldrichjohne.budget.tracker.util.mapper.model.ResponseWrapper;
 import io.vavr.control.Either;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.UUID;
@@ -20,27 +26,38 @@ import java.util.UUID;
 public class BalanceServiceImpl implements BalanceService {
 
     private final BalanceRepo balanceRepo;
+    private final BalanceHistoryService balanceHistoryService;
 
-    public BalanceServiceImpl(final BalanceRepo balanceRepo) {
+    public BalanceServiceImpl(
+            final BalanceRepo balanceRepo,
+            final BalanceHistoryService balanceHistoryService) {
         this.balanceRepo = balanceRepo;
+        this.balanceHistoryService = balanceHistoryService;
     }
 
     @Override
-    public ResponseWrapper updateBalance(final BalanceRequestDTO balanceRequestDTO)
+    @Transactional
+    public ResponseWrapper updateBalance(final BalanceRequestDTO balanceRequestDTO, String flowId)
             throws NoSuchElementException {
 
         if (Objects.isNull(balanceRequestDTO)) {
             throw new IllegalArgumentException("Update Balance: Input Body is null");
         }
 
-        UUID inputId = balanceRequestDTO.getId();
+        balanceHistoryService.addBalanceHistory(
+                new BalanceHistoryDTO(
+                        null,
+                        UUID.fromString(flowId),
+                        BigDecimal.valueOf(balanceRequestDTO.getAmount()),
+                        null, LocalDateTime.now(), ""));
 
-        Balance currentBalance = balanceRepo.findById(inputId).orElseThrow(
-                () -> new EntityNotFoundException("Update Balance: Balance record with ID = " + inputId + " not found"));
+        UUID balanceId = balanceRepo.findAll().getFirst().getId();
+        Balance currentBalance = balanceRepo.findById(balanceId).orElseThrow(
+                () -> new EntityNotFoundException("Update Balance: Balance record with ID = " + balanceId + " not found"));
 
         final BalanceDTO newBalanceDto = new BalanceDTO();
 
-        newBalanceDto.setId(inputId);
+        newBalanceDto.setId(balanceId);
         newBalanceDto.setRemainingBalance(this.operation(
                 currentBalance.getRemainingBalance(),
                 balanceRequestDTO.getAmount(),
@@ -66,15 +83,5 @@ public class BalanceServiceImpl implements BalanceService {
             }
             default -> throw new IllegalArgumentException("Update Balance: Invalid operation type");
         };
-    }
-
-    @Override
-    public ResponseWrapper getBalance() {
-        Balance currentBalance = balanceRepo.findAll().getFirst();
-        return new ResponseWrapper(
-                Objects.requireNonNull(BalanceMapper.convert(Either.left(currentBalance))).get(),
-                ResponseWrapperStatus.OK.toString(),
-                "Retrieve Balance: Success"
-        );
     }
 }

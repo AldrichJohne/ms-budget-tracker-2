@@ -8,7 +8,6 @@ import com.aldrichjohne.budget.tracker.repository.BalanceHistoryRepo;
 import com.aldrichjohne.budget.tracker.service.impl.BalanceHistoryServiceImpl;
 import com.aldrichjohne.budget.tracker.util.mapper.model.BalanceHistoryMapper;
 import com.aldrichjohne.budget.tracker.util.mapper.model.ResponseWrapper;
-import com.aldrichjohne.budget.tracker.util.validator.ConstraintValidator;
 import io.vavr.control.Either;
 import jakarta.validation.*;
 import org.junit.jupiter.api.Assertions;
@@ -37,11 +36,14 @@ public class BalanceHistoryServiceImplTest {
     BalanceService balanceService;
 
     @Mock
+    BalanceQueryService balanceQueryService;
+
+    @Mock
     Validator validator;
 
     @BeforeEach
     void setup() {
-        service = new BalanceHistoryServiceImpl(repo, balanceService, validator);
+        service = new BalanceHistoryServiceImpl(repo, balanceQueryService, validator);
     }
 
     @Test
@@ -56,7 +58,7 @@ public class BalanceHistoryServiceImplTest {
         BalanceHistoryEntity balanceHistoryRequest = new BalanceHistoryEntity(
                 uuid, flowId, new BigDecimal("10000.00"), new BigDecimal("0"), LocalDateTime.now(), "");
 
-        Mockito.when(balanceService.getBalance()).thenReturn(remainingBalance);
+        Mockito.when(balanceQueryService.getBalance()).thenReturn(remainingBalance);
         Mockito.when(repo.save(Mockito.any())).thenReturn(balanceHistoryResponse);
 
         ResponseWrapper result = service.addBalanceHistory(BalanceHistoryMapper.convert(Either.left(balanceHistoryRequest)).get());

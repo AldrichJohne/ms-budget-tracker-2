@@ -6,10 +6,9 @@ import com.aldrichjohne.budget.tracker.model.entity.dto.BalanceDTO;
 import com.aldrichjohne.budget.tracker.model.entity.dto.BalanceHistoryDTO;
 import com.aldrichjohne.budget.tracker.repository.BalanceHistoryRepo;
 import com.aldrichjohne.budget.tracker.service.BalanceHistoryService;
-import com.aldrichjohne.budget.tracker.service.BalanceService;
+import com.aldrichjohne.budget.tracker.service.BalanceQueryService;
 import com.aldrichjohne.budget.tracker.util.mapper.model.BalanceHistoryMapper;
 import com.aldrichjohne.budget.tracker.util.mapper.model.ResponseWrapper;
-import com.aldrichjohne.budget.tracker.util.validator.ConstraintValidator;
 import io.vavr.control.Either;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +21,12 @@ import java.util.Objects;
 @Slf4j
 public class BalanceHistoryServiceImpl implements BalanceHistoryService {
     private final BalanceHistoryRepo repo;
-    public final BalanceService balanceService;
+    public final BalanceQueryService balanceQueryService;
     private final Validator validator;
 
-    public BalanceHistoryServiceImpl(BalanceHistoryRepo repo, BalanceService balanceService, Validator validator) {
+    public BalanceHistoryServiceImpl(BalanceHistoryRepo repo, BalanceQueryService balanceQueryService, Validator validator) {
         this.repo = repo;
-        this.balanceService = balanceService;
+        this.balanceQueryService = balanceQueryService;
         this.validator = validator;
     }
 
@@ -41,7 +40,7 @@ public class BalanceHistoryServiceImpl implements BalanceHistoryService {
         //TODO: Need fixing, the validator is not being triggered
         //TODO: ConstraintValidator.validate(balanceHistoryDTO, validator, "Add Balance History");
 
-        BalanceDTO currentBalanceDto = (BalanceDTO) balanceService.getBalance().getResponse();
+        BalanceDTO currentBalanceDto = (BalanceDTO) balanceQueryService.getBalance().getResponse();
         double currentBalance = currentBalanceDto.getRemainingBalance();
 
         getBalanceAfter(BigDecimal.valueOf(currentBalance), balanceHistoryDTO);

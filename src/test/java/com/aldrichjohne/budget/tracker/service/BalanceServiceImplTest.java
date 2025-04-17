@@ -158,24 +158,4 @@ class BalanceServiceImplTest {
         Assertions.assertEquals("Update Balance: Input Body is null", exception.getMessage());
     }
 
-//    @Test
-//    void success_fetching_all_balance() {
-//        UUID id = UUID.randomUUID();
-//        Balance balance = new Balance(id, 25000);
-//
-//        Mockito.when(balanceRepo.findAll()).thenReturn(List.of(balance));
-//
-//        ResponseWrapper result = service.getBalance();
-//
-//        Assertions.assertNotNull(result);
-//    }
-//
-//    @Test
-//    void failed_fetching_all_balance() {
-//        Mockito.doThrow(new EntityNotFoundException("")).when(balanceRepo).findAll();
-//
-//        Assertions.assertThrows(EntityNotFoundException.class, () -> {
-//            throw new EntityNotFoundException();
-//        });
-//    }
 }

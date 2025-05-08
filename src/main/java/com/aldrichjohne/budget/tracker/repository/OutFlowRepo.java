@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface OutFlow extends JpaRepository<com.aldrichjohne.budget.tracker.model.entity.OutFlow, UUID> {
+public interface OutFlowRepo extends JpaRepository<com.aldrichjohne.budget.tracker.model.entity.OutFlow, UUID> {
 }

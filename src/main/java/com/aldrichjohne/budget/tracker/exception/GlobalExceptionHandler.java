@@ -1,6 +1,9 @@
 package com.aldrichjohne.budget.tracker.exception;
 
 import com.aldrichjohne.budget.tracker.enums.ResponseWrapperStatus;
+import com.aldrichjohne.budget.tracker.exception.customexceptions.InputIsNullException;
+import com.aldrichjohne.budget.tracker.exception.customexceptions.InsufficientBalanceException;
+import com.aldrichjohne.budget.tracker.exception.customexceptions.MandatoryInputMissingException;
 import com.aldrichjohne.budget.tracker.util.mapper.model.ResponseWrapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +23,29 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // Custom Exceptions
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<ResponseWrapper> handleNotEnoughBalanceException(InsufficientBalanceException ex) {
+        log.error("Not enough balance exception: {}", ex.getMessage(), ex);
+        return ResponseEntity.badRequest()
+                .body(new ResponseWrapper(null, ResponseWrapperStatus.ERROR.name(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(InputIsNullException.class)
+    public ResponseEntity<ResponseWrapper> handleInoutIsNull(InputIsNullException ex) {
+        log.error("Input is null: {}", ex.getMessage(), ex);
+        return ResponseEntity.badRequest()
+                .body(new ResponseWrapper(null, ResponseWrapperStatus.ERROR.name(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(MandatoryInputMissingException.class)
+    public ResponseEntity<ResponseWrapper> handleMandatoryInputIsNullOrMissing(MandatoryInputMissingException ex) {
+        log.error("A mandatory input is null: {}", ex.getMessage(), ex);
+        return ResponseEntity.badRequest()
+                .body(new ResponseWrapper(null, ResponseWrapperStatus.ERROR.name(), ex.getMessage()));
+    }
+
+    // Java Library exceptions
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ResponseWrapper> handleIllegalArgumentException(IllegalArgumentException ex) {
         log.error("Illegal Argument Exception: {}", ex.getMessage(), ex);

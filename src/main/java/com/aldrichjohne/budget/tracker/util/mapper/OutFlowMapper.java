@@ -18,7 +18,7 @@ public class OutFlowMapper {
             return Either.right(new OutFlowDTO(
                     toConvert.getLeft().getId(),
                     toConvert.getLeft().getDate(),
-                    toConvert.getLeft().getBill(),
+                    toConvert.getLeft().getBillId(),
                     toConvert.getLeft().getAmount(),
                     toConvert.getLeft().getRemarks()
             ));
@@ -26,7 +26,7 @@ public class OutFlowMapper {
             return Either.left(new OutFlow(
                     toConvert.get().getId(),
                     toConvert.get().getDate(),
-                    toConvert.get().getBill(),
+                    toConvert.get().getBillId(),
                     toConvert.get().getAmount(),
                     toConvert.get().getRemarks()
             ));

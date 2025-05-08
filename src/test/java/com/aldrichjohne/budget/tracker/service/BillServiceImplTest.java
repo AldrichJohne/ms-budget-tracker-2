@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,7 +32,7 @@ public class BillServiceImplTest {
 
     @Test
     void success_adding_bill() {
-        Bills bill = new Bills(UUID.randomUUID(), "Electric Bill", 4000, false);
+        Bills bill = new Bills(UUID.randomUUID(), "Electric Bill", new BigDecimal("4000"), false);
         Mockito.when(repo.save(bill)).thenReturn(bill);
 
         var result = service.addBill(BillsMapper.convert(Either.left(bill)).get());
@@ -42,7 +43,7 @@ public class BillServiceImplTest {
 
     @Test
     void unsuccessful_adding_bill_duplicate_record() {
-        Bills bill = new Bills(UUID.randomUUID(), "Electric Bill", 4000, false);
+        Bills bill = new Bills(UUID.randomUUID(), "Electric Bill", new BigDecimal("4000"), false);
         Mockito.when(repo.findByName(bill.getName())).thenReturn(Optional.of(bill));
 
         var result = service.addBill(BillsMapper.convert(Either.left(bill)).get());
@@ -64,9 +65,9 @@ public class BillServiceImplTest {
     @Test
     void success_deleting_bill() {
         UUID uuid = UUID.randomUUID();
-        Bills bill = new Bills(uuid, "E-bill", 4000, false);
+        Bills bill = new Bills(uuid, "E-bill", new BigDecimal("4000"), false);
         Mockito.when(repo.findById(uuid)).thenReturn(Optional.of(bill));
-        Mockito.when(repo.save(bill)).thenReturn(new Bills(uuid, "E-bill", 4000, true));
+        Mockito.when(repo.save(bill)).thenReturn(new Bills(uuid, "E-bill", new BigDecimal("4000"), true));
 
         var result = service.removeBill(uuid);
         Assertions.assertEquals("OK", result.getStatus());
@@ -76,9 +77,9 @@ public class BillServiceImplTest {
     @Test
     void success_soft_deleting_bill() {
         UUID uuid = UUID.randomUUID();
-        Bills bill = new Bills(uuid, "E-bill", 4000, false);
+        Bills bill = new Bills(uuid, "E-bill", new BigDecimal("4000"), false);
         Mockito.when(repo.findById(uuid)).thenReturn(Optional.of(bill));
-        Mockito.when(repo.save(bill)).thenReturn(new Bills(uuid, "E-bill", 4000, true));
+        Mockito.when(repo.save(bill)).thenReturn(new Bills(uuid, "E-bill", new BigDecimal("4000"), true));
 
         var result = service.softRemoveBill(uuid);
         Assertions.assertEquals("OK", result.getStatus());
@@ -126,7 +127,7 @@ public class BillServiceImplTest {
     @Test
     void success_updating_bill() {
         UUID uuid = UUID.randomUUID();
-        Bills bill = new Bills(uuid, "E-bill", 4000, false);
+        Bills bill = new Bills(uuid, "E-bill", new BigDecimal("4000"), false);
         Mockito.when(repo.findById(uuid)).thenReturn(Optional.of(bill));
         Mockito.when(repo.save(bill)).thenReturn(bill);
 
@@ -140,7 +141,7 @@ public class BillServiceImplTest {
     @Test
     void failed_updating_bill_EntityNotFoundException() {
         UUID uuid = UUID.randomUUID();
-        Bills bill = new Bills(uuid, "E-Bill", 4000, false);
+        Bills bill = new Bills(uuid, "E-Bill", new BigDecimal("4000"), false);
         Mockito.when(repo.findById(uuid)).thenReturn(Optional.empty());
 
         Mockito.doThrow(new EntityNotFoundException("")).when(repo).findById(uuid);
@@ -161,7 +162,7 @@ public class BillServiceImplTest {
     @Test
     void success_fetching_bill() {
         UUID uuid = UUID.randomUUID();
-        Bills bill = new Bills(uuid, "E-Bill", 4000, false);
+        Bills bill = new Bills(uuid, "E-Bill", new BigDecimal("4000"), false);
         Mockito.when(repo.findById(uuid)).thenReturn(Optional.of(bill));
         ResponseWrapper expected = new ResponseWrapper(BillsMapper.convert(Either.left(bill)).get(), ResponseWrapperStatus.OK.toString(), "Retrieve Bill: Success");
 
@@ -193,9 +194,9 @@ public class BillServiceImplTest {
     @Test
     public void success_fetching_all_undeleted_bill() {
         UUID uuid = UUID.randomUUID();
-        Bills bill = new Bills(uuid, "E-Bill", 4000, false);
-        Bills bill2 = new Bills(uuid, "Car", 22000, false);
-        Bills bill3 = new Bills(uuid, "Car Insurance", 4100, true);
+        Bills bill = new Bills(uuid, "E-Bill", new BigDecimal("4000"), false);
+        Bills bill2 = new Bills(uuid, "Car", new BigDecimal("22000"), false);
+        Bills bill3 = new Bills(uuid, "Car Insurance", new BigDecimal("4100"), true);
         Mockito.when(repo.findAll()).thenReturn(List.of(bill, bill2, bill3));
 
         var result = service.getBillWithoutDeleted();
@@ -206,9 +207,9 @@ public class BillServiceImplTest {
     @Test
     public void success_fetching_all_bill() {
         UUID uuid = UUID.randomUUID();
-        Bills bill = new Bills(uuid, "E-Bill", 4000, false);
-        Bills bill2 = new Bills(uuid, "Car", 22000, false);
-        Bills bill3 = new Bills(uuid, "Car Insurance", 4100, true);
+        Bills bill = new Bills(uuid, "E-Bill", new BigDecimal("4000"), false);
+        Bills bill2 = new Bills(uuid, "Car", new BigDecimal("22000"), false);
+        Bills bill3 = new Bills(uuid, "Car Insurance", new BigDecimal("4100"), true);
         Mockito.when(repo.findAll()).thenReturn(List.of(bill, bill2, bill3));
 
         var result = service.getAllBillsWithDeleted();
